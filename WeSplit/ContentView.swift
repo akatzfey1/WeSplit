@@ -10,21 +10,28 @@ import SwiftUI
 struct ContentView: View {
     @State private var checkAmount: Double? = nil
     @State private var numberOfPeople = 2
-    @State private var tipPercentage = 18
+    @State private var tipPercentage = 20
     @FocusState private var amountIsFocused: Bool
     
-    let tipPercentages = [0, 10,  15, 18, 20, 25]
-    
-    var totalPerPerson: Double {
-        // Calculate the total per person here
-        let peopleCount = Double(numberOfPeople + 2)
+    var tipTotal: Double {
         let tipSelection = Double(tipPercentage)
-        
         let tipValue = (checkAmount ?? 0.0) / 100 * tipSelection
-        let grandTotal = (checkAmount ?? 0.0) + tipValue
+        return tipValue
+    }
+
+    var grandTotal: Double {
+        let grandTotal = (checkAmount ?? 0.0) + tipTotal
+        return grandTotal
+    }
+
+    var totalPerPerson: Double {
+        let peopleCount = Double(numberOfPeople + 2)
         let totalPerPerson = grandTotal / peopleCount
-        
         return totalPerPerson
+    }
+    
+    var currencyStyle: FloatingPointFormatStyle<Double>.Currency {
+        FloatingPointFormatStyle<Double>.Currency(code: Locale.current.currencyCode ?? "USD")
     }
 
     
@@ -32,8 +39,7 @@ struct ContentView: View {
         NavigationView {
             Form {
                 Section {
-                    TextField("Amount", value: $checkAmount, format:
-                        .currency(code: Locale.current.currencyCode ?? "USD"))
+                    TextField("Amount", value: $checkAmount, format: currencyStyle)
                         .keyboardType(.decimalPad)
                         .focused($amountIsFocused)
                     
@@ -46,18 +52,26 @@ struct ContentView: View {
                 
                 Section {
                     Picker("Tip percentage", selection: $tipPercentage) {
-                        ForEach(tipPercentages, id:\.self) {
+                        ForEach(0..<101) {
                             Text($0, format: .percent)
                         }
                     }
-                    .pickerStyle(.segmented)
-                } header: {
-                    Text("Tip amount:")
                 }
                 
                 Section {
-                    Text(totalPerPerson, format:
-                        .currency(code: Locale.current.currencyCode ?? "USD"))
+                    Text(tipTotal, format: currencyStyle)
+                } header: {
+                    Text("Tip Total:")
+                }
+                
+                Section {
+                    Text(grandTotal, format: currencyStyle)
+                } header: {
+                    Text("Grand Total:")
+                }
+
+                Section {
+                    Text(totalPerPerson, format: currencyStyle)
                 } header: {
                     Text("Total per person:")
                 }
@@ -77,6 +91,8 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        ZStack { //Fix for Apple's @FocusState in top level view bug
+            ContentView()
+        }
     }
 }
